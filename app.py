@@ -3,27 +3,48 @@ import pandas as pd
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 
-st.title("Find your Sport!")
+# variables
+choice_1 = 1
 
 @st.cache
 def get_df():
-    df = pd.read_excel('data/new skill.xlsx') 
-    return df.set_index("Sport")
+    df = pd.read_csv('data/skills.csv').set_index("Sport")
+    questions = pd.read_csv("data/question.csv")
+    return df, questions
 
-df = get_df()
+df, questions = get_df()
+
+# st.write(df.head())
 
 
+page = st.radio(
+    "Do you exercise regularly?",
+    (" ", "Yes", "No")
+)
 
-arr = []
-for i in range(14):
-    st.subheader(f'Question No.{i+1}')
-    a = st.slider(" ",1, 10, value = np.random.randint(3, 10),key = i)
+if page == "Yes":
+    choice_1 = st.radio(
+        "Are you interested in having a new buddy?",
+        (" ", "Yes", "No")
+    )
 
-    arr.append(a)
+if choice_1 == "Yes":
+    st.subheader(
+        "Bob is looking for a new buddy to do what you are doing! Chat him up now and get a discount for your next subscription!"
+    )
 
-arr = np.array(arr).reshape(1,-1)
-dic = {"fitted": cosine_similarity(df, arr).reshape(-1)}
-result = pd.DataFrame(dic, index = df.index, columns=["fitted"]).sort_values(by=["fitted"], ascending=False)
+if page == "No":
+    st.header("Now is the time to find a sport for you!")
+    arr = []
+    for col in df.columns:
+        question = questions[questions['factor'] == col]['question'].values[0]
+        st.subheader(question)
+        a = st.slider(" ",1, 10, value = np.random.randint(3, 10),key = col)
 
-st.write(result.head(3))
+        arr.append(a)
 
+    arr = np.array(arr).reshape(1,-1)
+    dic = {"fitted": cosine_similarity(df, arr).reshape(-1)}
+    result = pd.DataFrame(dic, index = df.index, columns=["fitted"]).sort_values(by=["fitted"], ascending=False)
+
+    st.write(result.head(3))
